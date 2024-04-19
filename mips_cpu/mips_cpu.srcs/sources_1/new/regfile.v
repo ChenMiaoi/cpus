@@ -76,7 +76,7 @@ module regfile(
             o_r_reg_data2 <= `ZERO_WORD;
         end else if((i_r_reg_addr2 == i_w_reg_addr) && 
             (i_w_reg_en == `WRITE_ENABLE)     && 
-            (i_r_reg_en1 == `READ_ENABLE)) begin
+            (i_r_reg_en2 == `READ_ENABLE)) begin
             o_r_reg_data2 <= i_w_reg_data;
         end else if(i_r_reg_en2 == `READ_ENABLE) begin
             o_r_reg_data2 <= regs[i_r_reg_addr2];

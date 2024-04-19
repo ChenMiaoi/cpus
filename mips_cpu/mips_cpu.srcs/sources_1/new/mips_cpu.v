@@ -171,7 +171,7 @@ module mips_cpu(
 
         // from execute_memory output
         .i_execute_w_reg_en(i_memory_w_reg_en),             .i_execute_w_reg_addr(i_memory_w_reg_addr),
-        .i_execute_w_reg_data(i_memory_w_reg_data),
+        .i_execute_w_reg_data(i_memory_w_reg_data), 
 
         // sent to memmory_write_back
         .o_write_back_w_reg_en(o_memory_w_reg_en),          .o_write_back_w_reg_addr(o_memory_w_reg_addr),
