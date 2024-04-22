@@ -104,6 +104,13 @@ module mips_cpu(
 
         // form regfile output
         .i_regfile_reg_data1(read_reg1_data),           .i_regfile_reg_data2(read_reg2_data),
+
+        //! 新增：对于Execute和Memory阶段的RAW处理
+        .i_execute_w_reg_en(o_execute_w_reg_en),        .i_execute_w_reg_addr(o_execute_w_reg_addr),
+        .i_execute_w_reg_data(o_execute_w_reg_data),
+
+        .i_memory_w_reg_en(o_memory_w_reg_en),          .i_memory_w_reg_addr(o_memory_w_reg_addr),
+        .i_memory_w_reg_data(o_memory_w_reg_data),
         
         // send to regfile input
         .o_regfile_r_reg_en1(read_reg1_en),             .o_regfile_r_reg_en2(read_reg2_en),

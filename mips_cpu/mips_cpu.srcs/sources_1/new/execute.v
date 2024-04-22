@@ -22,12 +22,14 @@
 
 module execute(
     input   wire                    rst,
+
     input   wire  [`ALU_SEL_BUS]    i_inst_decode_alu_sel,
     input   wire  [`ALU_OP_BUS]     i_inst_decode_alu_op,
     input   wire  [`REG_BUS]        i_inst_decode_reg_data1,
     input   wire  [`REG_BUS]        i_inst_decode_reg_data2,
     input   wire  [`REG_ADDR_BUS]   i_inst_decode_w_reg_addr,
     input   wire                    i_inst_decode_w_reg_en,
+
     output  reg                     o_w_reg_en,
     output  reg   [`REG_ADDR_BUS]   o_w_reg_addr,
     output  reg   [`REG_BUS]        o_w_reg_data
@@ -52,7 +54,7 @@ module execute(
 
     always @(*) begin
         o_w_reg_addr <= i_inst_decode_w_reg_addr;
-        o_w_reg_en  <= i_inst_decode_w_reg_en;
+        o_w_reg_en   <= i_inst_decode_w_reg_en;
         case (i_inst_decode_alu_sel)
             `EXE_RES_LOGIC: begin
                 o_w_reg_data <= logic_out;

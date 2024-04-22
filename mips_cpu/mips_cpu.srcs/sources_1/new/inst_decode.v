@@ -29,6 +29,16 @@ module inst_decode(
     input   wire    [`REG_BUS]          i_regfile_reg_data1,    //! rs1's data
     input   wire    [`REG_BUS]          i_regfile_reg_data2,    //! rs2's data
 
+    // deal RAW data hazard in Execute stage
+    input   wire                        i_execute_w_reg_en,
+    input   wire    [`REG_ADDR_BUS]     i_execute_w_reg_addr,
+    input   wire    [`REG_BUS]          i_execute_w_reg_data,
+
+    // deal RAW data hazard in Memory stage
+    input   wire                        i_memory_w_reg_en,
+    input   wire [`REG_ADDR_BUS]        i_memory_w_reg_addr,
+    input   wire [`REG_BUS]             i_memory_w_reg_data,
+
     // output into regfile
     output  reg                         o_regfile_r_reg_en1,    //! the read enable signal for rs1 
     output  reg                         o_regfile_r_reg_en2,    //! the read enable signal for rs2
@@ -90,7 +100,7 @@ module inst_decode(
             o_regfile_r_reg_en2     <= `READ_DISABLE;
             o_regfile_r_reg_addr1   <= i_fetch_inst[25:21];
             o_regfile_r_reg_addr2   <= i_fetch_inst[20:16];
-            imm             <= `ZERO_WORD;
+            imm                     <= `ZERO_WORD;
 
             // to configure each instruction individually
             case (op)
@@ -115,9 +125,19 @@ module inst_decode(
     //! if rs1(or rs2) is enable, read rs1(or rs2)'s data
     //! if rs1(or rs2) is disable, it repretend rs1(or rs2) is imme
     //! all other cases are assigned a value of 0
+    //! 新增：对于Execute和Memory阶段被依赖的结果，需要forwarding
+    //!     如果和目的寄存器一样，且写使能和读使能导通，就会发生RAW
     always @(*) begin
         if (rst == `RST_ENABLE) begin
             o_execute_reg_data1 <= `ZERO_WORD;
+        end else if ((o_regfile_r_reg_en1 == `READ_ENABLE) &&
+            (i_execute_w_reg_en == `WRITE_ENABLE) &&
+            (i_execute_w_reg_addr == o_regfile_r_reg_addr1)) begin
+            o_execute_reg_data1 <= i_execute_w_reg_data;
+        end else if ((o_regfile_r_reg_en1 == `READ_ENABLE) &&
+            (i_memory_w_reg_en == `WRITE_ENABLE) &&
+            (i_memory_w_reg_addr == o_regfile_r_reg_addr1)) begin
+            o_execute_reg_data1 <= i_execute_w_reg_data;
         end else if(o_regfile_r_reg_en1 == `READ_ENABLE) begin
             o_execute_reg_data1 <= i_regfile_reg_data1;
         end else if(o_regfile_r_reg_en1 == `READ_DISABLE) begin
@@ -130,6 +150,14 @@ module inst_decode(
     always @(*) begin
         if (rst == `RST_ENABLE) begin
             o_execute_reg_data2 <= `ZERO_WORD;
+        end else if ((o_regfile_r_reg_en2 == `READ_ENABLE) &&
+            (i_execute_w_reg_en == `WRITE_ENABLE) &&
+            (i_execute_w_reg_addr == o_regfile_r_reg_addr2)) begin
+            o_execute_reg_data2 <= i_execute_w_reg_data;
+        end else if ((o_regfile_r_reg_en2 == `READ_ENABLE) &&
+            (i_memory_w_reg_en == `WRITE_ENABLE) &&
+            (i_memory_w_reg_addr == o_regfile_r_reg_addr2)) begin
+            o_execute_reg_data2 <= i_execute_w_reg_data;
         end else if(o_regfile_r_reg_en2 == `READ_ENABLE) begin
             o_execute_reg_data2 <= i_regfile_reg_data2;
         end else if(o_regfile_r_reg_en2 == `READ_DISABLE) begin

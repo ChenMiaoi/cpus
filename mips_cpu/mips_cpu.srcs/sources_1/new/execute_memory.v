@@ -23,9 +23,11 @@
 module execute_memory(
     input   wire                        rst,
     input   wire                        clk,
+    
     input   wire                        i_execute_w_reg_en,
     input   wire    [`REG_ADDR_BUS]     i_execute_w_reg_addr,
     input   wire    [`REG_BUS]          i_execute_w_reg_data,
+    
     output  reg                         o_memory_w_reg_en,
     output  reg     [`REG_ADDR_BUS]     o_memory_w_reg_addr,
     output  reg     [`REG_BUS]          o_memory_w_reg_data

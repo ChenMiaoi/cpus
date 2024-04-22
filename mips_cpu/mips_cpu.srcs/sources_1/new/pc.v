@@ -22,10 +22,10 @@
 `include "./defines.v"
 
 module pc(
-    input   wire            rst,        // reset signal
-    input   wire            clk,        // clock signal
-    output  reg             inst_en,    // instruction memory enable signal
-    output  reg     [31:0]  pc_addr     // need to get the address of pc 
+    input   wire                        rst,        // reset signal
+    input   wire                        clk,        // clock signal
+    output  reg                         inst_en,    // instruction memory enable signal
+    output  reg     [`INST_ADDR_BUS]    pc_addr     // need to get the address of pc 
     );
 
     always @(posedge clk) begin
