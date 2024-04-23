@@ -27,7 +27,17 @@ module memory_write_back(
     input   wire                        i_memory_w_reg_en,
     input   wire    [`REG_ADDR_BUS]     i_memory_w_reg_addr,
     input   wire    [`REG_BUS]          i_memory_w_reg_data,
-    
+
+    //! 新增：HILO模块输入
+    input   wire                        i_memory_w_reg_hilo_en,
+    input   wire    [`REG_BUS]          i_memory_w_reg_hi_data,
+    input   wire    [`REG_BUS]          i_memory_w_reg_lo_data,
+
+    //! 新增：HILO模块输出
+    output  reg                         o_hilo_w_reg_hilo_en,
+    output  reg     [`REG_BUS]          o_hilo_w_reg_hi_data,
+    output  reg     [`REG_BUS]          o_hilo_w_reg_lo_data,
+
     output  reg                         o_regfile_w_reg_en,
     output  reg     [`REG_ADDR_BUS]     o_regfile_w_reg_addr,
     output  reg     [`REG_BUS]          o_regfile_w_reg_data
@@ -38,10 +48,16 @@ module memory_write_back(
             o_regfile_w_reg_en      <= `WRITE_DISABLE;
             o_regfile_w_reg_addr    <= `NOP_REG_ADDR;
             o_regfile_w_reg_data    <= `ZERO_WORD;
+            o_hilo_w_reg_hilo_en    <= `WRITE_DISABLE;
+            o_hilo_w_reg_hi_data    <= `ZERO_WORD;
+            o_hilo_w_reg_lo_data    <= `ZERO_WORD;
         end else begin
             o_regfile_w_reg_en      <= i_memory_w_reg_en;
             o_regfile_w_reg_addr    <= i_memory_w_reg_addr;
             o_regfile_w_reg_data    <= i_memory_w_reg_data;
+            o_hilo_w_reg_hilo_en    <= i_memory_w_reg_hilo_en;
+            o_hilo_w_reg_hi_data    <= i_memory_w_reg_hi_data;
+            o_hilo_w_reg_lo_data    <= i_memory_w_reg_lo_data;
         end
     end
 endmodule

@@ -60,6 +60,13 @@
 `define EXE_SRA                 6'b000_011              // funct for sra
 `define EXE_SRAV                6'b000_111              // funct for srav
 
+`define EXE_MOVZ  6'b001010
+`define EXE_MOVN  6'b001011
+`define EXE_MFHI  6'b010000
+`define EXE_MTHI 6'b010001
+`define EXE_MFLO 6'b010010
+`define EXE_MTLO 6'b010011
+
 `define EXE_SYNC                6'b001_111              // funct for sync
 `define EXE_PREF                6'b110_011              // opcode for pref
 
@@ -89,9 +96,17 @@
 `define EXE_SRAV_OP             8'b0000_0111
 `define EXE_NOP_OP              8'b0000_0000            // ALU opcode for nop
 
+`define EXE_MOVZ_OP  8'b00001010
+`define EXE_MOVN_OP  8'b00001011
+`define EXE_MFHI_OP  8'b00010000
+`define EXE_MTHI_OP  8'b00010001
+`define EXE_MFLO_OP  8'b00010010
+`define EXE_MTLO_OP  8'b00010011
+
 /* ALU funct: */ 
 `define EXE_RES_LOGIC           3'b001                  // TODO 
 `define EXE_RES_SHIFT           3'b010
+`define EXE_RES_MOVE            3'b011	
 `define EXE_RES_NOP             3'b000                  // TODO
 
 // ======================   Macros for Instruction Memory  ======================

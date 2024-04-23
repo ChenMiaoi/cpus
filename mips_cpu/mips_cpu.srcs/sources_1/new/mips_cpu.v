@@ -53,21 +53,37 @@ module mips_cpu(
     wire                    o_execute_w_reg_en;
     wire [`REG_ADDR_BUS]    o_execute_w_reg_addr;
     wire [`REG_BUS]         o_execute_w_reg_data;
+    //! 新增：对HILO模块的输出
+    wire                    o_execute_w_reg_hilo_en;
+    wire [`REG_BUS]         o_execute_w_reg_hi_data;
+    wire [`REG_BUS]         o_execute_w_reg_lo_data;
 
     // for execute with memory output and memory input
     wire                    i_memory_w_reg_en;
     wire [`REG_ADDR_BUS]    i_memory_w_reg_addr;
     wire [`REG_BUS]         i_memory_w_reg_data;
+    //! 新增：对HILO模块的输入
+    wire                    i_memory_w_reg_hilo_en;
+    wire [`REG_BUS]         i_memory_w_reg_hi_data;
+    wire [`REG_BUS]         i_memory_w_reg_lo_data;
 
     // for memory output and memory wirte back input
     wire                    o_memory_w_reg_en;
     wire [`REG_ADDR_BUS]    o_memory_w_reg_addr;
     wire [`REG_BUS]         o_memory_w_reg_data;
+    //! 新增：对HILO模块的输出
+    wire                    o_memory_w_reg_hilo_en;
+    wire [`REG_BUS]         o_memory_w_reg_hi_data;
+    wire [`REG_BUS]         o_memory_w_reg_lo_data;
 
     // for memory write back output and write back input
     wire                    i_write_back_w_reg_en;
     wire [`REG_ADDR_BUS]    i_write_back_w_reg_addr;
     wire [`REG_BUS]         i_write_back_w_reg_data;
+    //! 新增：对HILO模块的输入
+    wire                    i_write_back_w_reg_hilo_en;
+    wire [`REG_BUS]         i_write_back_w_reg_hi_data;
+    wire [`REG_BUS]         i_write_back_w_reg_lo_data;
 
     // for inst decode and regfile
     wire                    read_reg1_en;
@@ -76,6 +92,10 @@ module mips_cpu(
     wire [`REG_BUS]         read_reg2_data;
     wire [`REG_ADDR_BUS]    read_reg1_addr;
     wire [`REG_ADDR_BUS]    read_reg2_addr;
+
+    //! 新增：HILO模块
+    wire [`REG_BUS]         read_hi_data;
+    wire [`REG_BUS]         read_lo_data;
 
     // outports wire
     // wire        	inst_en;
@@ -156,21 +176,42 @@ module mips_cpu(
         .i_inst_decode_reg_data1(i_execute_reg1),       .i_inst_decode_reg_data2(i_execute_reg2),
         .i_inst_decode_w_reg_en(i_execute_w_reg_en),    .i_inst_decode_w_reg_addr(i_execute_w_reg_addr),
 
+        //! 新增：HILO
+        .i_hilo_reg_hi_data(read_hi_data),              .i_hilo_reg_lo_data(read_lo_data),
+
+        .i_mem_w_reg_hilo_en(i_memory_w_reg_hilo_en), 
+        .i_mem_w_reg_hi_data(i_memory_w_reg_hi_data),   .i_mem_w_reg_lo_data(i_memory_w_reg_lo_data),
+
+        .i_write_back_w_reg_hilo_en(),
+        .i_write_back_w_reg_hi_data(),                  .i_write_back_w_reg_lo_data(),
+
         // send to execute_memory input
         .o_w_reg_en(o_execute_w_reg_en),                .o_w_reg_addr(o_execute_w_reg_addr),
-        .o_w_reg_data(o_execute_w_reg_data)
+        .o_w_reg_data(o_execute_w_reg_data),
+
+        //! 新增：HILO
+        .o_w_reg_hilo_en(o_execute_w_reg_hilo_en),
+        .o_w_reg_hi_data(o_execute_w_reg_hi_data),      .o_w_reg_lo_data(o_execute_w_reg_lo_data)
     );
 
     execute_memory ex_mem0(
-        .clk(clk),                              .rst(rst),
+        .clk(clk),                                      .rst(rst),
 
         // from execute output
         .i_execute_w_reg_en(o_execute_w_reg_en),        .i_execute_w_reg_addr(o_execute_w_reg_addr),
         .i_execute_w_reg_data(o_execute_w_reg_data),
 
+        //! 新增：HILO
+        .i_execute_w_reg_hilo_en(o_execute_w_reg_hilo_en),
+        .i_execute_w_reg_hi_data(o_execute_w_reg_hi_data),  .i_execute_w_reg_lo_data(o_execute_w_reg_lo_data),
+
         // send to memory
-        .o_memory_w_reg_en(i_memory_w_reg_en),          .o_memory_w_reg_addr(i_memory_w_reg_addr),
-        .o_memory_w_reg_data(i_memory_w_reg_data)
+        .o_memory_w_reg_en(i_memory_w_reg_en),              .o_memory_w_reg_addr(i_memory_w_reg_addr),
+        .o_memory_w_reg_data(i_memory_w_reg_data),
+
+        //! 新增：HILO
+        .o_memory_w_reg_hilo_en(i_memory_w_reg_hilo_en),
+        .o_memory_w_reg_hi_data(i_memory_w_reg_hi_data),    .o_memory_w_reg_lo_data(i_memory_w_reg_lo_data)
     );
 
     memory mem0(
@@ -180,9 +221,17 @@ module mips_cpu(
         .i_execute_w_reg_en(i_memory_w_reg_en),             .i_execute_w_reg_addr(i_memory_w_reg_addr),
         .i_execute_w_reg_data(i_memory_w_reg_data), 
 
+        //! 新增：HILO
+        .i_execute_w_reg_hilo_en(i_memory_w_reg_hilo_en), 
+        .i_execute_w_reg_hi_data(i_memory_w_reg_hi_data),   .i_execute_w_reg_lo_data(i_memory_w_reg_lo_data),
+
         // sent to memmory_write_back
         .o_write_back_w_reg_en(o_memory_w_reg_en),          .o_write_back_w_reg_addr(o_memory_w_reg_addr),
-        .o_write_back_w_reg_data(o_memory_w_reg_data)
+        .o_write_back_w_reg_data(o_memory_w_reg_data),
+
+        //! 新增：HILO
+        .o_write_back_w_reg_hilo_en(o_memory_w_reg_hilo_en),
+        .o_write_back_w_reg_hi_data(o_memory_w_reg_hi_data), .o_write_back_w_reg_lo_data(o_memory_w_reg_lo_data)
     );
 
     memory_write_back mem_wb0(
@@ -192,8 +241,28 @@ module mips_cpu(
         .i_memory_w_reg_en(o_memory_w_reg_en),              .i_memory_w_reg_addr(o_memory_w_reg_addr),
         .i_memory_w_reg_data(o_memory_w_reg_data),
 
+        //! 新增：HILO
+        .i_memory_w_reg_hilo_en(o_memory_w_reg_hilo_en), 
+        .i_memory_w_reg_hi_data(o_memory_w_reg_hi_data),    .i_memory_w_reg_lo_data(o_memory_w_reg_lo_data),
+
         // sent to write back
         .o_regfile_w_reg_en(i_write_back_w_reg_en),         .o_regfile_w_reg_addr(i_write_back_w_reg_addr),
-        .o_regfile_w_reg_data(i_write_back_w_reg_data)
+        .o_regfile_w_reg_data(i_write_back_w_reg_data),
+        
+        //! 新增：HILO
+        .o_hilo_w_reg_hilo_en(i_write_back_w_reg_hilo_en),
+        .o_hilo_w_reg_hi_data(i_write_back_w_reg_hi_data),  .o_hilo_w_reg_lo_data(i_write_back_w_reg_lo_data)
+    );
+
+    //! 新增HILO模块
+    hilo_reg hilo_reg0(
+        .clk(clk),                                          .rst(rst),
+
+        //! write
+        .i_w_hilo_reg_en(i_write_back_w_reg_hilo_en),
+        .i_w_hi_reg_data(i_write_back_w_reg_hi_data),       .i_w_lo_reg_data(i_write_back_w_reg_lo_data),
+
+        //! read
+        .o_hi_reg_data(read_hi_data),                       .o_lo_reg_data(read_lo_data)
     );
 endmodule

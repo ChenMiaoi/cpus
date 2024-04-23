@@ -188,6 +188,60 @@ module inst_decode(
                                     o_regfile_r_reg_en2 <= `READ_ENABLE;
                                     inst_valid          <= `INST_VALID;
                                 end
+                                `EXE_MFHI: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_MFHI_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_MOVE;
+                                    o_regfile_r_reg_en1 <= `READ_DISABLE;
+                                    o_regfile_r_reg_en2 <= `READ_DISABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MTHI: begin
+                                    o_execute_w_reg_en  <= `WRITE_DISABLE;
+                                    o_execute_alu_op    <= `EXE_MTHI_OP; 
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_DISABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MFLO: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_MFLO_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_MOVE;
+                                    o_regfile_r_reg_en1 <= `READ_DISABLE;
+                                    o_regfile_r_reg_en2 <= `READ_DISABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MTLO: begin
+                                    o_execute_w_reg_en  <= `WRITE_DISABLE;
+                                    o_execute_alu_op    <= `EXE_MTLO_OP; 
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_DISABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MOVN: begin
+                                    o_execute_alu_op    <= `EXE_MOVN_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_MOVE;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                    if (o_execute_reg_data2 != `ZERO_WORD) begin
+                                        o_execute_w_reg_en <= `WRITE_ENABLE;
+                                    end else begin
+                                        o_execute_w_reg_en <= `WRITE_DISABLE;
+                                    end
+                                end
+                                `EXE_MOVZ: begin
+                                    o_execute_alu_op    <= `EXE_MOVZ_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_MOVE;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                    if (o_execute_reg_data2 == `ZERO_WORD) begin
+                                        o_execute_w_reg_en <= `WRITE_ENABLE;
+                                    end else begin
+                                        o_execute_w_reg_en <= `WRITE_DISABLE;
+                                    end
+                                end
                                 default: begin
                                 end
                             endcase
