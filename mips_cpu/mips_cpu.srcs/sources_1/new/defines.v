@@ -44,16 +44,54 @@
 
 // ======================   Macros for Specific Instructions  ======================
 /* instruction: ORI */ 
+`define EXE_AND                 6'b100_100              // funct for and
+`define EXE_OR                  6'b100_101              // funct for or
+`define EXE_XOR                 6'b100_110              // funct for xor
+`define EXE_NOR                 6'b100_111              // funct for nor
+`define EXE_ANDI                6'b001_100              // opcode for andi
 `define EXE_ORI                 6'b001_101              // opcode for ori
+`define EXE_XORI                6'b001_110              // opcode for xori
+`define EXE_LUI                 6'b001_111              // opcode for lui
+
+`define EXE_SLL                 6'b000_000              // funct for sll
+`define EXE_SLLV                6'b000_100              // funct for sllv
+`define EXE_SRL                 6'b000_010              // funct for srl
+`define EXE_SRLV                6'b000_110              // funct for srlv
+`define EXE_SRA                 6'b000_011              // funct for sra
+`define EXE_SRAV                6'b000_111              // funct for srav
+
+`define EXE_SYNC                6'b001_111              // funct for sync
+`define EXE_PREF                6'b110_011              // opcode for pref
+
+`define EXE_SPECIAL_INST        6'b000_000              // opcode for SPECIAL
+`define EXE_REGIMM_INST         6'b000_001
+`define EXE_SPECIAL2_INST       6'b011_100
+
 /* instruction: NOP */ 
 `define EXE_NOP                 6'b000_000              // opcode for nop
+`define SSNOP                   32'b00000000_00000000_00000000_01000000
 
 /* ALU op code: */ 
-`define EXE_OR_OP               8'b0010_0101            // ALU opcode for or
+`define EXE_AND_OP              8'b0010_0100
+`define EXE_OR_OP               8'b0010_0101
+`define EXE_XOR_OP              8'b0010_0110
+`define EXE_NOR_OP              8'b0010_0111
+`define EXE_ANDI_OP             8'b0101_1001
+`define EXE_ORI_OP              8'b0101_1010
+`define EXE_XORI_OP             8'b0101_1011
+`define EXE_LUI_OP              8'b0101_1100   
+
+`define EXE_SLL_OP              8'b0111_1100
+`define EXE_SLLV_OP             8'b0000_0100
+`define EXE_SRL_OP              8'b0000_0010
+`define EXE_SRLV_OP             8'b0000_0110
+`define EXE_SRA_OP              8'b0000_0011
+`define EXE_SRAV_OP             8'b0000_0111
 `define EXE_NOP_OP              8'b0000_0000            // ALU opcode for nop
 
-/* ALU TODO: */ 
+/* ALU funct: */ 
 `define EXE_RES_LOGIC           3'b001                  // TODO 
+`define EXE_RES_SHIFT           3'b010
 `define EXE_RES_NOP             3'b000                  // TODO
 
 // ======================   Macros for Instruction Memory  ======================

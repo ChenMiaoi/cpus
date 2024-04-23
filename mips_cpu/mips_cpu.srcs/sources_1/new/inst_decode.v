@@ -69,9 +69,17 @@ module inst_decode(
     //     op     |     rs    |     rt    |     rd    |     sa   |   func   
     // ----------------------------------------------------------------------
 
-    wire [5:0] op   = i_fetch_inst[31:26];
+    //! 首先按照指令码opcode进行判断
+    //!     a. 如果是SPECIAL类型
+    //!         1. 先判断op1，如果op1为0，那么就可以根据功能吗funct进行判断
+    //!         2. 否则，是无效指令
+    //!     b. 如果不是SPECIAL类型
+    //!         1. 那么就是立即数类型
+    //! 如果指令码opcode是0
+    //!     a. 判断op3，就能够得出指令
+    wire [5:0] op   = i_fetch_inst[31:26];      // opcode 指令码
     wire [4:0] op1  = i_fetch_inst[10:6];
-    wire [5:0] op2  = i_fetch_inst[5:0];
+    wire [5:0] op2  = i_fetch_inst[5:0];        // funct 功能码
     wire [4:0] op3  = i_fetch_inst[20:16];
 
     reg [`REG_BUS] imm;
@@ -103,20 +111,175 @@ module inst_decode(
             imm                     <= `ZERO_WORD;
 
             // to configure each instruction individually
+            //! 首先按照指令码opcode进行判断
+            //!     a. 如果是SPECIAL类型
+            //!         1. 先判断op1，如果op1为0，那么就可以根据功能吗funct进行判断
+            //!         2. 否则，是无效指令
+            //!     b. 如果不是SPECIAL类型
+            //!         1. 那么就是立即数类型
+            //! 如果指令码opcode是0
+            //!     a. 判断op3，就能够得出指令
             case (op)
+                `EXE_SPECIAL_INST: begin        // 首先判断SPECIAL码
+                    case (op1)
+                        5'b00_000: begin        // 如果op1 = 0，就可用funct去判断
+                            case (op2)
+                                `EXE_OR: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_OR_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_LOGIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_AND: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_AND_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_LOGIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_XOR: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_XOR_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_LOGIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_NOR: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_NOR_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_LOGIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SLLV: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SLL_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_SHIFT;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SRLV: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SRL_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_SHIFT;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SRAV: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SRA_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_SHIFT;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SYNC: begin
+                                    o_execute_w_reg_en  <= `WRITE_DISABLE;
+                                    o_execute_alu_op    <= `EXE_NOP_OP; 
+                                    o_execute_alu_sel   <= `EXE_RES_NOP;
+                                    o_regfile_r_reg_en1 <= `READ_DISABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                default: begin
+                                end
+                            endcase
+                        end
+                    default: begin
+                    end
+                    endcase //! end op1
+                end //! end EXE_SPECIAL_INST
                 `EXE_ORI: begin
-                    o_execute_w_reg_en      <= `WRITE_ENABLE;               // write enable for rd
-                    o_execute_alu_op        <= `EXE_OR_OP;                  // or logic instruction
-                    o_execute_alu_sel       <= `EXE_RES_LOGIC;              // logic instruction
-                    o_regfile_r_reg_en1     <= `READ_ENABLE;                // read enable for rs1
-                    o_regfile_r_reg_en2     <= `READ_DISABLE;               // rs2 for imm, so don't need read enable
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                   // write enable for rd
+                    o_execute_alu_op        <= `EXE_OR_OP;                      // or logic instruction
+                    o_execute_alu_sel       <= `EXE_RES_LOGIC;                  // logic instruction
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;                    // read enable for rs1
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;                   // rs2 for imm, so don't need read enable
                     imm                     <= { 16'h0, i_fetch_inst[15:0] };     // unsigned extend for imm
                     o_execute_w_reg_addr    <= i_fetch_inst[20:16];               // rd's position
-                    inst_valid              <= `INST_VALID;                 // valid instruction
+                    inst_valid              <= `INST_VALID;                     // valid instruction
+                end
+                `EXE_ANDI: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_AND_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_LOGIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { 16'h0, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;                  
+                end
+                `EXE_XORI: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_XOR_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_LOGIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { 16'h0, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;                  
+                end
+                `EXE_LUI: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_OR_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_LOGIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { 16'h0, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;                  
+                end
+                `EXE_PREF: begin
+                    o_execute_w_reg_en      <= `WRITE_DISABLE;                  
+                    o_execute_alu_op        <= `EXE_NOP_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_NOP;                 
+                    o_regfile_r_reg_en1     <= `READ_DISABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { 16'h0, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;                  
                 end
                 default: begin
                 end
-            endcase
+            endcase //! end op
+
+            if (i_fetch_inst[31: 21] == 11'b00000000000) begin
+                if (op2 == `EXE_SLL) begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_SLL_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_SHIFT;                 
+                    o_regfile_r_reg_en1     <= `READ_DISABLE;            
+                    o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                    imm[4:0]                <= i_fetch_inst[10:6];    
+                    o_execute_w_reg_addr    <= i_fetch_inst[15:11];        
+                    inst_valid              <= `INST_VALID;                  
+                end else if (op2 == `EXE_SRL) begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_SRL_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_SHIFT;                 
+                    o_regfile_r_reg_en1     <= `READ_DISABLE;            
+                    o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                    imm[4:0]                <= i_fetch_inst[10:6];    
+                    o_execute_w_reg_addr    <= i_fetch_inst[15:11];        
+                    inst_valid              <= `INST_VALID;            
+                end else if (op2 == `EXE_SRA) begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_SRA_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_SHIFT;                 
+                    o_regfile_r_reg_en1     <= `READ_DISABLE;            
+                    o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                    imm[4:0]                <= i_fetch_inst[10:6];    
+                    o_execute_w_reg_addr    <= i_fetch_inst[15:11];        
+                    inst_valid              <= `INST_VALID;                
+                end
+            end
         end
     end
 

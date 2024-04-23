@@ -36,6 +36,7 @@ module execute(
     );
 
     reg [`REG_BUS] logic_out;
+    reg [`REG_BUS] shift_res;
 
     always @(*) begin
         if (rst == `RST_ENABLE) begin
@@ -45,10 +46,41 @@ module execute(
                 `EXE_OR_OP: begin
                     logic_out <= i_inst_decode_reg_data1 | i_inst_decode_reg_data2;
                 end 
+                `EXE_AND_OP: begin
+                    logic_out <= i_inst_decode_reg_data1 & i_inst_decode_reg_data2;
+                end
+                `EXE_NOR_OP: begin
+                    logic_out <= ~(i_inst_decode_reg_data1 | i_inst_decode_reg_data2);
+                end 
+                `EXE_XOR_OP: begin
+                    logic_out <= i_inst_decode_reg_data1 ^ i_inst_decode_reg_data2;
+                end
                 default: begin
                     logic_out <= `ZERO_WORD;
                 end
             endcase
+        end
+    end
+
+    always @(*) begin
+        if (rst == `RST_ENABLE) begin
+            shift_res <= `ZERO_WORD;
+        end else begin
+            case (i_inst_decode_alu_op)
+                `EXE_SLL_OP: begin
+                    shift_res <= i_inst_decode_reg_data2 << i_inst_decode_reg_data1[4:0];
+                end 
+                `EXE_SRL_OP: begin
+                    shift_res <= i_inst_decode_reg_data2 >> i_inst_decode_reg_data1[4:0];
+                end
+                `EXE_SRA_OP: begin
+                    shift_res <= ({32{i_inst_decode_reg_data2[31]}} << (6'd32 - { 1'b0, i_inst_decode_reg_data1[4:0] }))
+                                | i_inst_decode_reg_data2 >> i_inst_decode_reg_data1[4:0]; 
+                end
+                default: begin
+                    shift_res <= `ZERO_WORD;
+                end 
+            endcase 
         end
     end
 
@@ -58,6 +90,9 @@ module execute(
         case (i_inst_decode_alu_sel)
             `EXE_RES_LOGIC: begin
                 o_w_reg_data <= logic_out;
+            end
+            `EXE_RES_SHIFT: begin
+                o_w_reg_data <= shift_res; 
             end
             default: begin
                 o_w_reg_data <= `ZERO_WORD;
