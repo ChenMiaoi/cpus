@@ -97,6 +97,16 @@ module mips_cpu(
     wire [`REG_BUS]         read_hi_data;
     wire [`REG_BUS]         read_lo_data;
 
+    //! 新增：CTRL模块，用于多周期的MADD等指令
+    wire [`DOUBLE_REG_BUS]  o_hilo_temp;
+    wire [1:0]              o_clk_cnt;
+    wire [`DOUBLE_REG_BUS]  i_hilo_temp;
+    wire [1:0]              i_clk_cnt;
+
+    wire [5:0]              stall_req;
+    wire                    o_inst_decode_stall_req;
+    wire                    o_execute_stall_req;
+
     // outports wire
     // wire        	inst_en;
     // wire [31:0] 	pc_addr;
@@ -104,6 +114,8 @@ module mips_cpu(
     pc pc_reg0(
         .rst     	( rst       ),
         .clk     	( clk       ),
+        //! 新增：CTRL模块信号输入
+        .i_stall_req( stall_req ),
         .inst_en 	( o_rom_en  ),
         .pc_addr 	( pc_addr   )
     );
@@ -113,6 +125,8 @@ module mips_cpu(
     inst_fetch if_id0(
         .clk                    ( clk           ),
         .rst                    ( rst           ),
+        //! 新增：CTRL模块信号输入
+        .i_stall_req            ( stall_req     ),
         .i_rom_pc               ( pc_addr       ),
         .i_rom_inst             ( i_rom_data    ),
         .o_inst_decode_pc       ( i_inst_decode_pc  ),
@@ -139,7 +153,10 @@ module mips_cpu(
         // send to inst_decode with execute
         .o_execute_alu_op(o_inst_decode_alu_op),        .o_execute_alu_sel(o_inst_decode_alu_sel),
         .o_execute_reg_data1(o_inst_decode_reg1),       .o_execute_reg_data2(o_inst_decode_reg2),
-        .o_execute_w_reg_en(o_inst_decode_reg_en),      .o_execute_w_reg_addr(o_inst_decode_reg_addr)
+        .o_execute_w_reg_en(o_inst_decode_reg_en),      .o_execute_w_reg_addr(o_inst_decode_reg_addr),
+
+        //! 新增：CTRL信号输出
+        .o_stall_req(o_inst_decode_stall_req)
     );
 
     regfile regfile0(
@@ -156,6 +173,9 @@ module mips_cpu(
 
     inst_decode_execute id_ex0(
         .clk(clk),                              .rst(rst),
+
+        //! 新增：CTRL信号输入
+        .i_stall_req(stall_req),
 
         // from inst decode output
         .i_inst_decode_alu_op(o_inst_decode_alu_op),        .i_inst_decode_alu_sel(o_inst_decode_alu_sel),
@@ -179,6 +199,9 @@ module mips_cpu(
         //! 新增：HILO
         .i_hilo_reg_hi_data(read_hi_data),              .i_hilo_reg_lo_data(read_lo_data),
 
+        //! 新增：针对于MADD类型的处理
+        .i_hilo_temp(i_hilo_temp),                      .i_clk_cnt(i_clk_cnt),
+
         .i_mem_w_reg_hilo_en(i_memory_w_reg_hilo_en), 
         .i_mem_w_reg_hi_data(i_memory_w_reg_hi_data),   .i_mem_w_reg_lo_data(i_memory_w_reg_lo_data),
 
@@ -191,7 +214,11 @@ module mips_cpu(
 
         //! 新增：HILO
         .o_w_reg_hilo_en(o_execute_w_reg_hilo_en),
-        .o_w_reg_hi_data(o_execute_w_reg_hi_data),      .o_w_reg_lo_data(o_execute_w_reg_lo_data)
+        .o_w_reg_hi_data(o_execute_w_reg_hi_data),      .o_w_reg_lo_data(o_execute_w_reg_lo_data),
+
+        //! 新增：CTRL和针对于MADD类型的处理
+        .o_hilo_temp(o_hilo_temp),                      .o_clk_cnt(o_clk_cnt),
+        .o_stall_req(o_execute_stall_req)
     );
 
     execute_memory ex_mem0(
@@ -200,6 +227,10 @@ module mips_cpu(
         // from execute output
         .i_execute_w_reg_en(o_execute_w_reg_en),        .i_execute_w_reg_addr(o_execute_w_reg_addr),
         .i_execute_w_reg_data(o_execute_w_reg_data),
+
+        //! 新增：CTRL和针对于MADD类型的处理
+        .i_hilo_temp(o_hilo_temp),                      .i_clk_cnt(o_clk_cnt),
+        .i_stall_req(stall_req),
 
         //! 新增：HILO
         .i_execute_w_reg_hilo_en(o_execute_w_reg_hilo_en),
@@ -211,7 +242,10 @@ module mips_cpu(
 
         //! 新增：HILO
         .o_memory_w_reg_hilo_en(i_memory_w_reg_hilo_en),
-        .o_memory_w_reg_hi_data(i_memory_w_reg_hi_data),    .o_memory_w_reg_lo_data(i_memory_w_reg_lo_data)
+        .o_memory_w_reg_hi_data(i_memory_w_reg_hi_data),    .o_memory_w_reg_lo_data(i_memory_w_reg_lo_data),
+
+        //! 新增：针对于MADD类型的处理
+        .o_hilo_temp(i_hilo_temp),                          .o_clk_cnt(i_clk_cnt)
     );
 
     memory mem0(
@@ -264,5 +298,13 @@ module mips_cpu(
 
         //! read
         .o_hi_reg_data(read_hi_data),                       .o_lo_reg_data(read_lo_data)
+    );
+
+    //! 新增CTRL模块
+    ctrl ctrl0(
+        .rst(rst),
+        .i_inst_decode_stall_req(o_inst_decode_stall_req),
+        .i_execute_stall_req(o_execute_stall_req),
+        .o_stall_req(stall_req)
     );
 endmodule

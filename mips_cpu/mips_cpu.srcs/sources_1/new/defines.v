@@ -40,7 +40,10 @@
 `define FALSE_V                 1'b0                    // FALSE for logic
 
 `define CHIP_ENABLE             1'b1                    // enable chip
-`define CHIP_DISABLE            1'b0                    // disable chip
+`define CHIP_DISABLE            1'b0                    // disable 
+
+`define STOP_ENABLE             1'b1
+`define STOP_DISABLE            1'b0
 
 // ======================   Macros for Specific Instructions  ======================
 /* instruction: ORI */ 
@@ -60,12 +63,33 @@
 `define EXE_SRA                 6'b000_011              // funct for sra
 `define EXE_SRAV                6'b000_111              // funct for srav
 
-`define EXE_MOVZ  6'b001010
-`define EXE_MOVN  6'b001011
-`define EXE_MFHI  6'b010000
-`define EXE_MTHI 6'b010001
-`define EXE_MFLO 6'b010010
-`define EXE_MTLO 6'b010011
+`define EXE_MOVZ                6'b001_010
+`define EXE_MOVN                6'b001_011
+`define EXE_MFHI                6'b010_000
+`define EXE_MTHI                6'b010_001
+`define EXE_MFLO                6'b010_010
+`define EXE_MTLO                6'b010_011
+
+`define EXE_SLT                 6'b101_010
+`define EXE_SLTU                6'b101_011
+`define EXE_SLTI                6'b001_010
+`define EXE_SLTIU               6'b001_011   
+`define EXE_ADD                 6'b100_000
+`define EXE_ADDU                6'b100_001
+`define EXE_SUB                 6'b100_010
+`define EXE_SUBU                6'b100_011
+`define EXE_ADDI                6'b001_000
+`define EXE_ADDIU               6'b001_001
+`define EXE_CLZ                 6'b100_000
+`define EXE_CLO                 6'b100_001
+
+`define EXE_MUL                 6'b000_010
+`define EXE_MULT                6'b011_000
+`define EXE_MULTU               6'b011_001
+`define EXE_MADD                6'b000_000
+`define EXE_MADDU               6'b000_001
+`define EXE_MSUB                6'b000_100
+`define EXE_MSUBU               6'b000_101
 
 `define EXE_SYNC                6'b001_111              // funct for sync
 `define EXE_PREF                6'b110_011              // opcode for pref
@@ -96,17 +120,40 @@
 `define EXE_SRAV_OP             8'b0000_0111
 `define EXE_NOP_OP              8'b0000_0000            // ALU opcode for nop
 
-`define EXE_MOVZ_OP  8'b00001010
-`define EXE_MOVN_OP  8'b00001011
-`define EXE_MFHI_OP  8'b00010000
-`define EXE_MTHI_OP  8'b00010001
-`define EXE_MFLO_OP  8'b00010010
-`define EXE_MTLO_OP  8'b00010011
+`define EXE_MOVZ_OP             8'b0000_1010
+`define EXE_MOVN_OP             8'b0000_1011
+`define EXE_MFHI_OP             8'b0001_0000
+`define EXE_MTHI_OP             8'b0001_0001
+`define EXE_MFLO_OP             8'b0001_0010
+`define EXE_MTLO_OP             8'b0001_0011
+
+`define EXE_SLT_OP              8'b0010_1010
+`define EXE_SLTU_OP             8'b0010_1011
+`define EXE_SLTI_OP             8'b0101_0111
+`define EXE_SLTIU_OP            8'b0101_1000   
+`define EXE_ADD_OP              8'b0010_0000
+`define EXE_ADDU_OP             8'b0010_0001
+`define EXE_SUB_OP              8'b0010_0010
+`define EXE_SUBU_OP             8'b0010_0011
+`define EXE_ADDI_OP             8'b0101_0101
+`define EXE_ADDIU_OP            8'b0101_0110
+`define EXE_CLZ_OP              8'b1011_0000
+`define EXE_CLO_OP              8'b1011_0001
+
+`define EXE_MUL_OP              8'b1010_1001
+`define EXE_MULT_OP             8'b0001_1000
+`define EXE_MULTU_OP            8'b0001_1001
+`define EXE_MADD_OP             8'b1010_0110
+`define EXE_MADDU_OP            8'b1010_1000
+`define EXE_MSUB_OP             8'b1010_1010
+`define EXE_MSUBU_OP            8'b1010_1011
 
 /* ALU funct: */ 
 `define EXE_RES_LOGIC           3'b001                  // TODO 
 `define EXE_RES_SHIFT           3'b010
 `define EXE_RES_MOVE            3'b011	
+`define EXE_RES_ARITHMETIC      3'b100	
+`define EXE_RES_MUL             3'b101
 `define EXE_RES_NOP             3'b000                  // TODO
 
 // ======================   Macros for Instruction Memory  ======================

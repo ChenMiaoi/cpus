@@ -51,7 +51,10 @@ module inst_decode(
     output  reg     [`REG_BUS]          o_execute_reg_data1,    //! the rs1 which need to be calc
     output  reg     [`REG_BUS]          o_execute_reg_data2,    //! the rs2 which need to be calc
     output  reg     [`REG_ADDR_BUS]     o_execute_w_reg_addr,   //! the addr which need to be writen when calc done
-    output  reg                         o_execute_w_reg_en      //! the write enable signal for rd
+    output  reg                         o_execute_w_reg_en,     //! the write enable signal for rd
+
+    //! 新增：输出CTRL模块信号
+    output  wire                        o_stall_req
     );
 
     // for ori instruction:
@@ -84,6 +87,8 @@ module inst_decode(
 
     reg [`REG_BUS] imm;
     reg inst_valid;
+
+    assign o_stall_req = `STOP_DISABLE;
 
     // to init information
     always @(*) begin
@@ -242,6 +247,68 @@ module inst_decode(
                                         o_execute_w_reg_en <= `WRITE_DISABLE;
                                     end
                                 end
+                                `EXE_SLT: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SLT_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SLTU: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SLTU_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_ADD: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_ADD_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_ADDU: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_ADDU_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SUB: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SUB_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_SUBU: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_SUBU_OP;
+                                    o_execute_alu_sel   <= `EXE_RES_ARITHMETIC;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MULT: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_MULT_OP;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_MULTU: begin
+                                    o_execute_w_reg_en  <= `WRITE_ENABLE;
+                                    o_execute_alu_op    <= `EXE_MULTU_OP;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
                                 default: begin
                                 end
                             endcase
@@ -289,6 +356,108 @@ module inst_decode(
                     imm                     <= { 16'h0, i_fetch_inst[15:0] };    
                     o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
                     inst_valid              <= `INST_VALID;                  
+                end
+                `EXE_SLTI: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_SLT_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { {16{i_fetch_inst[15]}}, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;  
+                end
+                `EXE_SLTIU: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_SLTU_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { {16{i_fetch_inst[15]}}, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;  
+                end
+                `EXE_ADDI: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_ADDI_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { {16{i_fetch_inst[15]}}, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;  
+                end
+                `EXE_ADDIU: begin
+                    o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                    o_execute_alu_op        <= `EXE_ADDIU_OP;                    
+                    o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                    o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                    o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                    imm                     <= { {16{i_fetch_inst[15]}}, i_fetch_inst[15:0] };    
+                    o_execute_w_reg_addr    <= i_fetch_inst[20:16];        
+                    inst_valid              <= `INST_VALID;  
+                end
+                `EXE_SPECIAL2_INST: begin
+                    case (op2)
+                        `EXE_CLZ: begin
+                            o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                            o_execute_alu_op        <= `EXE_CLZ_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_CLO: begin
+                            o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                            o_execute_alu_op        <= `EXE_CLO_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_ARITHMETIC;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_DISABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_MUL: begin
+                            o_execute_w_reg_en      <= `WRITE_ENABLE;                  
+                            o_execute_alu_op        <= `EXE_MUL_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_MUL;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_MADD: begin
+                            o_execute_w_reg_en      <= `WRITE_DISABLE;                  
+                            o_execute_alu_op        <= `EXE_MADD_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_MUL;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_MADDU: begin
+                            o_execute_w_reg_en      <= `WRITE_DISABLE;                  
+                            o_execute_alu_op        <= `EXE_MADDU_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_MUL;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_MSUB: begin
+                            o_execute_w_reg_en      <= `WRITE_DISABLE;                  
+                            o_execute_alu_op        <= `EXE_MSUB_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_MUL;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        `EXE_MSUBU: begin
+                            o_execute_w_reg_en      <= `WRITE_DISABLE;                  
+                            o_execute_alu_op        <= `EXE_MSUBU_OP;                    
+                            o_execute_alu_sel       <= `EXE_RES_MUL;                 
+                            o_regfile_r_reg_en1     <= `READ_ENABLE;            
+                            o_regfile_r_reg_en2     <= `READ_ENABLE;               
+                            inst_valid              <= `INST_VALID;  
+                        end
+                        default: begin
+                        end 
+                    endcase
                 end
                 `EXE_PREF: begin
                     o_execute_w_reg_en      <= `WRITE_DISABLE;                  

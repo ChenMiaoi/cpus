@@ -24,6 +24,10 @@
 module pc(
     input   wire                        rst,        // reset signal
     input   wire                        clk,        // clock signal
+
+    //! 新增：来自CTRL模块信息
+    input   wire    [5:0]               i_stall_req,
+
     output  reg                         inst_en,    // instruction memory enable signal
     output  reg     [`INST_ADDR_BUS]    pc_addr     // need to get the address of pc 
     );
@@ -39,7 +43,7 @@ module pc(
     always @(posedge clk) begin
         if (inst_en == `CHIP_DISABLE) begin
             pc_addr <= `ZERO_WORD;              // if inst_en is disable, pc_addr can't be use
-        end else begin
+        end else if (i_stall_req[0] == `STOP_DISABLE) begin
             pc_addr <= pc_addr + 4'h4;          // pc_addr add 4 per clock time
         end
     end
