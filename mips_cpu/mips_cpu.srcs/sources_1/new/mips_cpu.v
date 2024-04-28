@@ -107,6 +107,15 @@ module mips_cpu(
     wire                    o_inst_decode_stall_req;
     wire                    o_execute_stall_req;
 
+    //! 新增：DIV模块
+    wire                    div_ready_en;
+    wire                    div_start_en;
+	wire                    div_annul_en;
+	wire                    signed_div_en;
+    wire [`REG_BUS]         div_opdata1;
+    wire [`REG_BUS]         div_opdata2;
+    wire [`DOUBLE_REG_BUS]  div_result;
+
     // outports wire
     // wire        	inst_en;
     // wire [31:0] 	pc_addr;
@@ -208,6 +217,9 @@ module mips_cpu(
         .i_write_back_w_reg_hilo_en(),
         .i_write_back_w_reg_hi_data(),                  .i_write_back_w_reg_lo_data(),
 
+        //! 新增:DIV模块处理
+        .i_div_ready_en(div_ready_en),                  .i_div_result(div_result),
+
         // send to execute_memory input
         .o_w_reg_en(o_execute_w_reg_en),                .o_w_reg_addr(o_execute_w_reg_addr),
         .o_w_reg_data(o_execute_w_reg_data),
@@ -218,7 +230,11 @@ module mips_cpu(
 
         //! 新增：CTRL和针对于MADD类型的处理
         .o_hilo_temp(o_hilo_temp),                      .o_clk_cnt(o_clk_cnt),
-        .o_stall_req(o_execute_stall_req)
+        .o_stall_req(o_execute_stall_req),
+
+        //! 新增：DIV模块输出
+        .o_signed_div_en(signed_div_en),                .o_div_start_en(div_start_en),
+        .o_div_opdata1(div_opdata1),                    .o_div_opdata2(div_opdata2)
     );
 
     execute_memory ex_mem0(
@@ -306,5 +322,16 @@ module mips_cpu(
         .i_inst_decode_stall_req(o_inst_decode_stall_req),
         .i_execute_stall_req(o_execute_stall_req),
         .o_stall_req(stall_req)
+    );
+
+    //! 新增：DIV模块
+    div div0(
+        .rst(rst),                                          .clk(clk),
+
+        .i_signed_div_en(signed_div_en),
+        .i_opdata1(div_opdata1),                            .i_opdata2(div_opdata2),
+        .i_start_en(div_start_en),                          .i_annul_en(1'b0),
+
+        .o_result(div_result),                              .o_ready_en(div_ready_en)
     );
 endmodule

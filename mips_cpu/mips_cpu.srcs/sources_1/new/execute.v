@@ -40,6 +40,10 @@ module execute(
     //! 新增：记录执行周期
     input   wire  [1:0]             i_clk_cnt,
 
+    //! 新增：除法运算
+    input   wire                    i_div_ready_en,
+    input   wire  [63:0]            i_div_result,
+
     //! 新增：来自于Memory阶段处理的RAW的数据
     input   wire                    i_mem_w_reg_hilo_en,
     input   wire  [`REG_BUS]        i_mem_w_reg_hi_data,
@@ -66,7 +70,13 @@ module execute(
     output  reg   [`DOUBLE_REG_BUS] o_hilo_temp,
 
     //! 新增：记录执行周期
-    output  reg   [1:0]             o_clk_cnt
+    output  reg   [1:0]             o_clk_cnt,
+
+    //! 新增：除法运算
+    output  reg                     o_signed_div_en,
+    output  reg                     o_div_start_en,
+    output  reg   [31:0]            o_div_opdata1,
+    output  reg   [31:0]            o_div_opdata2
     );
 
     reg [`REG_BUS] logic_out;
@@ -90,6 +100,7 @@ module execute(
     reg [`DOUBLE_REG_BUS]   mul_res;            //! 保存乘法结果
     reg [`DOUBLE_REG_BUS]   hilo_temp_first;    //! 保存上一个周期结果
     reg                     stall_req;          //! 针对于MADD、MSUB类型的暂停
+    reg                     stall_req_for_div;  //! 针对DIV类型的暂停
 
     //! 如果是减法或有符号比较运算，那么就需要对第二个操作数做补码
     assign i_reg_data2_mux = ((i_inst_decode_alu_op == `EXE_SUB_OP) ||
@@ -213,6 +224,7 @@ module execute(
     //! 新增处理MT类型
     //! 新增：算数运算对于MT类型
     //! 新增：处理MADD类型
+    //! 新增：处理DIV类型
     always @(*) begin
         if (rst == `RST_ENABLE) begin
             o_w_reg_hilo_en <= `WRITE_DISABLE;
@@ -227,6 +239,10 @@ module execute(
             o_w_reg_hi_data <= hilo_temp_first[63:32];
             o_w_reg_lo_data <= hilo_temp_first[31:0];
         end else if (i_inst_decode_alu_op == `EXE_MADD_OP || i_inst_decode_alu_op == `EXE_MADDU_OP) begin
+            o_w_reg_hilo_en <= `WRITE_ENABLE;
+            o_w_reg_hi_data <= hilo_temp_first[63:32];
+            o_w_reg_lo_data <= hilo_temp_first[31:0];
+        end else if (i_inst_decode_alu_op == `EXE_DIV_OP || i_inst_decode_alu_op == `EXE_DIVU_OP) begin
             o_w_reg_hilo_en <= `WRITE_ENABLE;
             o_w_reg_hi_data <= hilo_temp_first[63:32];
             o_w_reg_lo_data <= hilo_temp_first[31:0];
@@ -375,8 +391,73 @@ module execute(
     end
 
     //! 新增：暂停流水线
+    //! 新增：因DIV暂停的流水线
     always @(*) begin
-        o_stall_req     <= stall_req; 
+        o_stall_req     <= stall_req || stall_req_for_div; 
+    end
+
+    //! 新增：除法类型
+    always @(*) begin
+        if (rst == `RST_ENABLE) begin
+            stall_req_for_div   <= `STOP_DISABLE;
+            o_div_opdata1       <= `ZERO_WORD;
+            o_div_opdata2       <= `ZERO_WORD;
+            o_div_start_en      <= `DIV_STOP;
+            o_signed_div_en     <= 1'b0;
+        end else begin
+            stall_req_for_div   <= `STOP_DISABLE;
+            o_div_opdata1       <= `ZERO_WORD;
+            o_div_opdata2       <= `ZERO_WORD;
+            o_div_start_en      <= `DIV_STOP;
+            o_signed_div_en     <= 1'b0;
+
+            case (i_inst_decode_alu_op)
+                `EXE_DIV_OP: begin
+                    if (i_div_ready_en == `DIV_RESULT_READY_DISABLE) begin
+                        o_div_opdata1       <= i_inst_decode_reg_data1;
+                        o_div_opdata2       <= i_inst_decode_reg_data2;
+                        o_div_start_en      <= `DIV_START;
+                        o_signed_div_en     <= 1'b1;
+                        stall_req_for_div   <= `STOP_ENABLE;
+                    end else if (i_div_ready_en == `DIV_RESULT_READY_ENABLE) begin
+                        o_div_opdata1       <= i_inst_decode_reg_data1;
+                        o_div_opdata2       <= i_inst_decode_reg_data2;
+                        o_div_start_en      <= `DIV_START;
+                        o_signed_div_en     <= 1'b1;
+                        stall_req_for_div   <= `STOP_DISABLE;
+                    end else begin
+                        o_div_opdata1       <= `ZERO_WORD;
+                        o_div_opdata2       <= `ZERO_WORD;
+                        o_div_start_en      <= `DIV_STOP;
+                        o_signed_div_en     <= 1'b0;
+                        stall_req_for_div   <= `STOP_ENABLE;
+                    end
+                end 
+                `EXE_DIVU_OP: begin
+                    if (i_div_ready_en == `DIV_RESULT_READY_DISABLE) begin
+                        o_div_opdata1       <= i_inst_decode_reg_data1;
+                        o_div_opdata2       <= i_inst_decode_reg_data2;
+                        o_div_start_en      <= `DIV_START;
+                        o_signed_div_en     <= 1'b0;
+                        stall_req_for_div   <= `STOP_ENABLE;
+                    end else if (i_div_ready_en == `DIV_RESULT_READY_ENABLE) begin
+                        o_div_opdata1       <= i_inst_decode_reg_data1;
+                        o_div_opdata2       <= i_inst_decode_reg_data2;
+                        o_div_start_en      <= `DIV_START;
+                        o_signed_div_en     <= 1'b0;
+                        stall_req_for_div   <= `STOP_DISABLE;
+                    end else begin
+                        o_div_opdata1       <= `ZERO_WORD;
+                        o_div_opdata2       <= `ZERO_WORD;
+                        o_div_start_en      <= `DIV_STOP;
+                        o_signed_div_en     <= 1'b0;
+                        stall_req_for_div   <= `STOP_ENABLE;
+                    end
+                end
+                default: begin
+                end
+            endcase
+        end
     end
 
     always @(*) begin

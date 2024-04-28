@@ -309,6 +309,20 @@ module inst_decode(
                                     o_regfile_r_reg_en2 <= `READ_ENABLE;
                                     inst_valid          <= `INST_VALID;
                                 end
+                                `EXE_DIV: begin
+                                    o_execute_w_reg_en  <= `WRITE_DISABLE;
+                                    o_execute_alu_op    <= `EXE_DIV_OP;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
+                                `EXE_DIVU: begin
+                                    o_execute_w_reg_en  <= `WRITE_DISABLE;
+                                    o_execute_alu_op    <= `EXE_DIVU_OP;
+                                    o_regfile_r_reg_en1 <= `READ_ENABLE;
+                                    o_regfile_r_reg_en2 <= `READ_ENABLE;
+                                    inst_valid          <= `INST_VALID;
+                                end
                                 default: begin
                                 end
                             endcase

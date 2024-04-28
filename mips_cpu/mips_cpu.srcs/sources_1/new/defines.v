@@ -91,6 +91,9 @@
 `define EXE_MSUB                6'b000_100
 `define EXE_MSUBU               6'b000_101
 
+`define EXE_DIV                 6'b011_010
+`define EXE_DIVU                6'b011_011
+
 `define EXE_SYNC                6'b001_111              // funct for sync
 `define EXE_PREF                6'b110_011              // opcode for pref
 
@@ -148,6 +151,9 @@
 `define EXE_MSUB_OP             8'b1010_1010
 `define EXE_MSUBU_OP            8'b1010_1011
 
+`define EXE_DIV_OP              8'b00011010
+`define EXE_DIVU_OP             8'b00011011
+
 /* ALU funct: */ 
 `define EXE_RES_LOGIC           3'b001                  // TODO 
 `define EXE_RES_SHIFT           3'b010
@@ -155,6 +161,16 @@
 `define EXE_RES_ARITHMETIC      3'b100	
 `define EXE_RES_MUL             3'b101
 `define EXE_RES_NOP             3'b000                  // TODO
+
+// ======================   Macros for Div  ======================
+`define DIV_FREE                2'b00
+`define DIV_BY_ZERO             2'b01
+`define DIV_ON                  2'b10
+`define DIV_END                 2'b11
+`define DIV_RESULT_READY_ENABLE 1'b1
+`define DIV_RESULT_READY_DISABLE 1'b0
+`define DIV_START               1'b1
+`define DIV_STOP                1'b0  
 
 // ======================   Macros for Instruction Memory  ======================
 `define INST_ADDR_BUS           31:0                    // the address bus width of ROM
